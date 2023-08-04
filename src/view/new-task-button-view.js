@@ -21,4 +21,3 @@ export default class NewTaskButtonView {
     this.element = null;
   }
 }
-
