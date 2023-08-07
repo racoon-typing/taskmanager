@@ -1,20 +1,20 @@
-import { createElement } from '../render.js';
+import {createElement} from '../render.js';
 
 function createNewTaskButtonTemplate() {
   return '<button class="control__button">+ ADD NEW TASK</button>';
 }
 
 export default class NewTaskButtonView {
-  getTempalte() {
+  getTemplate() {
     return createNewTaskButtonTemplate();
   }
 
   getElement() {
-    if(!this.element) {
-      this.element = createElement(this.getTempalte());
+    if (!this.element) {
+      this.element = createElement(this.getTemplate());
     }
 
-    return this.getElement;
+    return this.element;
   }
 
   removeElement() {
