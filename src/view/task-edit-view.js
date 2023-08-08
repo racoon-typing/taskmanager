@@ -1,6 +1,6 @@
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 import { COLORS } from '../const.js';
-import {humanizeTaskDueDate, isTaskRepeating} from '../utils.js';
+import { humanizeTaskDueDate, isTaskRepeating } from '../utils.js';
 
 
 const BLANK_TASK = {
@@ -22,7 +22,7 @@ const BLANK_TASK = {
 
 
 function createTaskEditColorTemplate(currentColor) {
-  return COLORS.map((color) =>`<input
+  return COLORS.map((color) => `<input
       type="radio"
       id="color-${color}"
       class="card__color-input card__color-input--${color} visually-hidden"
@@ -36,7 +36,6 @@ function createTaskEditColorTemplate(currentColor) {
       >black</label
     >`).join('');
 }
-
 
 function createTaskEditReapeatingTemplate(repeating) {
   return (`
@@ -144,24 +143,15 @@ function createTaskEditTemplate(data) {
   `;
 }
 
-export default class TaskEditView {
+export default class TaskEditView extends AbstractView {
+  #task = null;
+
   constructor({ task = BLANK_TASK }) {
-    this.task = task;
+    super();
+    this.#task = task;
   }
 
-  getTemplate() {
-    return createTaskEditTemplate(this.task);
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
+  get template() {
+    return createTaskEditTemplate(this.#task);
   }
 }

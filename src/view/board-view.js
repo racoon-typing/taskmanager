@@ -1,24 +1,12 @@
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
-function createBoardViewTemplate() {
+function createBoardTemplate() {
   return '<section class="board container"></section>';
 }
 
-export default class BoardView {
-  getTemplate() {
-    return createBoardViewTemplate();
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
+export default class BoardView extends AbstractView {
+  get template() {
+    return createBoardTemplate();
   }
 }
 
