@@ -90,7 +90,7 @@ export default class BoardPresenter {
 
     render(new SortView(), this.#boardComponent.element);
     render(this.#taskListComponent, this.#boardComponent.element);
-    render(new TaskEditView({task: this.#boardTasks[0]}), this.#taskListComponent.element);
+    // render(new TaskEditView({task: this.#boardTasks[0]}), this.#taskListComponent.element);
 
     for (let i = 0; i < Math.min(this.#boardTasks.length, this.#renderedTaskCount); i++) {
       this.#renderTask(this.#boardTasks[i]);
