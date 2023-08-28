@@ -37,7 +37,8 @@ export default class BoardPresenter {
 
   #handleLoadMoreButtonClick = () => {
     this.#renderTasks(this.#renderedTaskCount, this.#renderedTaskCount + TASK_COUNT_PER_STEP);
-    if(this.#renderedTaskCount > this.#boardTasks.length) {
+    this.#renderedTaskCount += TASK_COUNT_PER_STEP;
+    if (this.#renderedTaskCount >= this.#boardTasks.length) {
       remove(this.#loadMoreButtonComponent);
     }
   };
@@ -83,7 +84,9 @@ export default class BoardPresenter {
   }
 
   #renderTasks(from, to) {
-    this.#boardTasks.slice(from, to).forEach((task) => this.#renderTask(task));
+    this.#boardTasks
+      .slice(from, to)
+      .forEach((task) => this.#renderTask(task));
   }
 
   #renderNoTasks() {
@@ -95,10 +98,11 @@ export default class BoardPresenter {
       onClick: this.#handleLoadMoreButtonClick
     });
 
-    render(this.#loadMoreButtonComponent, this.#boardContainer.element);
+    render(this.#loadMoreButtonComponent, this.#boardComponent.element);
   }
 
   #renderTaskList() {
+    render(this.#taskListComponent, this.#boardComponent.element);
     this.#renderTasks(0, Math.min(this.#boardTasks.length, TASK_COUNT_PER_STEP));
 
     if (this.#renderTaskList.length > TASK_COUNT_PER_STEP) {
