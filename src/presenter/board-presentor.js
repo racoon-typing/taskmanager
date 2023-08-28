@@ -48,7 +48,7 @@ export default class BoardPresenter {
 
   #renderTask(task) {
     const taskPresenter = new TaskPresenter({
-      taskListContainer: this.#taskListComponent.element
+      taskListContainer: this.#taskListComponent.element,
     });
 
     taskPresenter.init(task);
