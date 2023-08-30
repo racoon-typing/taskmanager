@@ -1,4 +1,4 @@
-import {remove, render, replace} from '../framework/render.js';
+import { remove, render, replace } from '../framework/render.js';
 import TaskView from '../view/task-view.js';
 import TaskEditView from '../view/task-edit-view.js';
 
@@ -11,7 +11,7 @@ export default class TaskPresenter {
 
   #task = null;
 
-  constructor({taskListContainer, onDataChange}) {
+  constructor({ taskListContainer, onDataChange }) {
     this.#taskListContainer = taskListContainer;
     this.#handleDataChange = onDataChange;
   }
@@ -25,7 +25,7 @@ export default class TaskPresenter {
     this.#taskComponent = new TaskView({
       task: this.#task,
       onEditClick: this.#handleEditClick,
-      onFavoriteClick: this.#handleArchiveClick,
+      onFavoriteClick: this.#handleFavoriteClick,
       onArchiveClick: this.#handleArchiveClick
     });
     this.#taskEditComponent = new TaskEditView({
@@ -73,19 +73,19 @@ export default class TaskPresenter {
   };
 
   #handleArchiveClick = () => {
-    this.#handleDataChange({...this.#task, isFavorite: !this.#task.isFavorite});
+    this.#handleDataChange({ ...this.#task, isArchive: !this.#task.isArchive });
   };
 
-  // #handleFavoriteClick = () => {
-
-  // }
-
+  #handleFavoriteClick = () => {
+    this.#handleDataChange({ ...this.#task, isFavorite: !this.#task.isFavorite });
+  };
 
   #handleEditClick = () => {
     this.#replaceCardToForm();
   };
 
-  #handleFormSubmit = () => {
+  #handleFormSubmit = (task) => {
+    this.#handleDataChange(task);
     this.#replaceFormToCard();
   };
 }
