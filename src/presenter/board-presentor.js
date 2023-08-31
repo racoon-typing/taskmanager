@@ -17,12 +17,12 @@ export default class BoardPresenter {
   #boardComponent = new BoardView();
   #taskListComponent = new TaskListView();
   #loadMoreButtonComponent = null;
-  #sortComponent = new SortView();
+  #sortComponent = null;
   #noTaskComponent = new NoTaskView();
 
   #boardTasks = [];
   #renderedTaskCount = TASK_COUNT_PER_STEP;
-  #taskPresentors = new Map();
+  #taskPresenters = new Map();
 
 
   constructor({boardContainer, taskModel}) {
@@ -44,23 +44,35 @@ export default class BoardPresenter {
     }
   };
 
+  #handleModeChange = () => {
+    this.#taskPresenters.forEach((presenter) => presenter.resetView());
+  };
+
   #handleTaskChange = (updatedTask) => {
     this.#boardTasks = updateItem(this.#boardTasks, updatedTask);
-    this.#taskPresentors.get(updatedTask.id).init(updatedTask);
+    this.#taskPresenters.get(updatedTask.id).init(updatedTask);
+  };
+
+  #handleSortTypeChange = (sortType) => {
+
   };
 
   #renderSort() {
-    render(this.#sortComponent, this.#boardComponent.element, RenderPosition.AFTERBEGIN);
+    this.#sortComponent = new SortView({
+      onSortTypeChange: this.#handleSortTypeChange
+    });
+    // render(this.#sortComponent, this.#boardComponent.element, RenderPosition.AFTERBEGIN);
   }
 
   #renderTask(task) {
     const taskPresenter = new TaskPresenter({
       taskListContainer: this.#taskListComponent.element,
       onDataChange: this.#handleTaskChange,
+      onModeChange: this.#handleModeChange
     });
 
     taskPresenter.init(task);
-    this.#taskPresentors.set(task.id, taskPresenter);
+    this.#taskPresenters.set(task.id, taskPresenter);
   }
 
   #renderTasks(from, to) {
@@ -82,8 +94,8 @@ export default class BoardPresenter {
   }
 
   #clearTaskList() {
-    this.#taskPresentors.forEach((presenter) => presenter.destroy);
-    this.#taskPresentors.clear();
+    this.#taskPresenters.forEach((presenter) => presenter.destroy);
+    this.#taskPresenters.clear();
     this.#renderedTaskCount = TASK_COUNT_PER_STEP;
     remove(this.#loadMoreButtonComponent);
   }

@@ -9,4 +9,10 @@ const FilterType = {
   ARCHIVE: 'archive',
 };
 
-export {COLORS, FilterType};
+const SortType = {
+  DEFAULT: 'default',
+  DATE_DOWN: 'date_down',
+  DATE_UP: 'date_up'
+};
+
+export {COLORS, FilterType, SortType};
