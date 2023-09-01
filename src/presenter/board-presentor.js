@@ -5,7 +5,9 @@ import SortView from '../view/sort-view.js';
 import LoadMoreButtonView from '../view/load-more-button-view.js';
 import NoTaskView from '../view/no-task-view.js';
 import TaskPresenter from './task-presenter.js';
-import {updateItem} from '../utils/common.js';
+import { updateItem } from '../utils/common.js';
+import { SortType } from '../const.js';
+import { sortTaskDown, sortTaskUp } from '../utils/task.js';
 
 
 const TASK_COUNT_PER_STEP = 8;
@@ -23,16 +25,18 @@ export default class BoardPresenter {
   #boardTasks = [];
   #renderedTaskCount = TASK_COUNT_PER_STEP;
   #taskPresenters = new Map();
+  #currentSortType = SortType.DEFAULT;
+  #sourcedBoardTasks = [];
 
 
-  constructor({boardContainer, taskModel}) {
+  constructor({ boardContainer, taskModel }) {
     this.#boardContainer = boardContainer;
     this.#tasksModel = taskModel;
   }
 
   init() {
     this.#boardTasks = [...this.#tasksModel.tasks];
-
+    this.#sourcedBoardTasks = [...this.#tasksModel.tasks];
     this.#renderBoard();
   }
 
@@ -50,18 +54,41 @@ export default class BoardPresenter {
 
   #handleTaskChange = (updatedTask) => {
     this.#boardTasks = updateItem(this.#boardTasks, updatedTask);
+    this.#sourcedBoardTasks = updateItem(this.#sourcedBoardTasks, updatedTask);
     this.#taskPresenters.get(updatedTask.id).init(updatedTask);
   };
 
-  #handleSortTypeChange = (sortType) => {
+  #sortTasks(sortType) {
+    switch (sortType) {
+      case SortType.DATE_UP:
+        this.#boardTasks.sort(sortTaskUp);
+        break;
+      case SortType.DATE_DOWN:
+        this.#boardTasks.sort(sortTaskDown);
+        break;
+      default:
+        this.#boardTasks = [...this.#sourcedBoardTasks];
+    }
 
+    this.#currentSortType = sortType;
+  }
+
+  #handleSortTypeChange = (sortType) => {
+    if (this.#currentSortType === sortType) {
+      return;
+    }
+
+    this.#sortTasks(sortType);
+    this.#clearTaskList();
+    this.#renderTaskList();
   };
 
   #renderSort() {
     this.#sortComponent = new SortView({
       onSortTypeChange: this.#handleSortTypeChange
     });
-    // render(this.#sortComponent, this.#boardComponent.element, RenderPosition.AFTERBEGIN);
+
+    render(this.#sortComponent, this.#boardComponent.element, RenderPosition.AFTERBEGIN);
   }
 
   #renderTask(task) {
@@ -89,7 +116,6 @@ export default class BoardPresenter {
     this.#loadMoreButtonComponent = new LoadMoreButtonView({
       onClick: this.#handleLoadMoreButtonClick
     });
-
     render(this.#loadMoreButtonComponent, this.#boardComponent.element);
   }
 
@@ -103,19 +129,17 @@ export default class BoardPresenter {
   #renderTaskList() {
     render(this.#taskListComponent, this.#boardComponent.element);
     this.#renderTasks(0, Math.min(this.#boardTasks.length, TASK_COUNT_PER_STEP));
-
-    if (this.#renderTaskList.length > TASK_COUNT_PER_STEP) {
+    if (this.#boardTasks.length > TASK_COUNT_PER_STEP) {
       this.#renderLoadMoreButton();
     }
   }
 
   #renderBoard() {
     render(this.#boardComponent, this.#boardContainer);
-
     if (this.#boardTasks.every((task) => task.isArchive)) {
-      render(this.#renderNoTasks);
+      this.#renderNoTasks();
+      return;
     }
-
     this.#renderSort();
     this.#renderTaskList();
   }
