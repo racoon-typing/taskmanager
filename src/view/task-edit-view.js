@@ -167,7 +167,27 @@ export default class TaskEditView extends AbstractStatefulView {
       .addEventListener('click', this.#dueDateToggleHandler);
     this.element.querySelector('.card__repeat-toggle')
       .addEventListener('click', this.#repeatingToggleHandler);
+    this.element.querySelector('.card__text').addEventListener('input', this.#descriptionInputHandler);
+    this.element.querySelector('.card__colors-wrap').addEventListener('change', this.#colorChangeHandler);
+
+    if (this._state.isRepeating) {
+      this.element.querySelector('.card__repeat-days-inner').addEventListener('change', this.#repeatingChangeHandler);
+    }
   }
+
+  #colorChangeHandler = (evt) => {
+    evt.preventDefault();
+    this.updateElement({
+      color: evt.target.value,
+    });
+  };
+
+  #descriptionInputHandler = (evt) => {
+    evt.preventDefault();
+    this._setState({
+      description: evt.target.value,
+    });
+  };
 
   #formSubmitHandler = (evt) => {
     evt.preventDefault();
@@ -178,6 +198,7 @@ export default class TaskEditView extends AbstractStatefulView {
     evt.preventDefault();
     this.updateElement({
       isDueDate: !this._state.isDueDate,
+      isRepeating: !this._state.isDueDate ? false : this._state.isRepeating,
     });
   };
 
@@ -185,6 +206,14 @@ export default class TaskEditView extends AbstractStatefulView {
     evt.preventDefault();
     this.updateElement({
       isRepeating: !this._state.isRepeating,
+      isDueDate: !this._state.isRepeating ? false : this._state.isDueDate,
+    });
+  };
+
+  #repeatingChangeHandler = (evt) => {
+    evt.preventDefault();
+    this.updateElement({
+      repeating: {...this._state.repeating, [evt.target.value]: evt.target.checked},
     });
   };
 
