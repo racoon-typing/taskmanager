@@ -1,6 +1,9 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import { COLORS } from '../const.js';
 import { humanizeTaskDueDate, isTaskRepeating } from '../utils/task.js';
+import flatpickr from 'flatpickr';
+
+import 'flatpickr/dist/flatpickr.min.css';
 
 
 const BLANK_TASK = {
@@ -21,7 +24,7 @@ const BLANK_TASK = {
 };
 
 
-function createTaskEditColorTemplate(currentColor) {
+function createTaskEditColorsTemplate(currentColor) {
   return COLORS.map((color) => `<input
       type="radio"
       id="color-${color}"
@@ -94,7 +97,9 @@ function createTaskEditTemplate(data) {
     : '';
 
   const repeatingTemplate = createTaskEditReapeatingTemplate(repeating, isRepeating);
-  const colorTemplate = createTaskEditColorTemplate(color);
+  const colorsTemplate = createTaskEditColorsTemplate(color);
+
+  const isSubmitDisabled = (isDueDate && dueDate === null) || (isRepeating && !isTaskRepeating(repeating));
 
   return `
     <article class="card card--edit card--${color} ${repeatingClassName}">
@@ -130,13 +135,13 @@ function createTaskEditTemplate(data) {
             <div class="card__colors-inner">
               <h3 class="card__colors-title">Color</h3>
               <div class="card__colors-wrap">
-                ${colorTemplate}
+                ${colorsTemplate}
               </div>
             </div>
           </div>
 
           <div class="card__status-btns">
-            <button class="card__save" type="submit">save</button>
+            <button class="card__save" type="submit" ${isSubmitDisabled ? 'disabled' : ''}>save</button>
             <button class="card__delete" type="button">delete</button>
           </div>
         </div>
@@ -147,6 +152,7 @@ function createTaskEditTemplate(data) {
 
 export default class TaskEditView extends AbstractStatefulView {
   #handleFormSubmit = null;
+  #datepicker = null;
 
   constructor({ task = BLANK_TASK, onFormSubmit }) {
     super();
@@ -158,6 +164,19 @@ export default class TaskEditView extends AbstractStatefulView {
 
   get template() {
     return createTaskEditTemplate(this._state);
+  }
+
+  removeElement() {
+    super.removeElement();
+
+    if (this.#datepicker) {
+      this.#datepicker.destroy();
+      this.#datepicker = null;
+    }
+  }
+
+  reset(task) {
+    this.updateElement(TaskEditView.parseTaskToState(task));
   }
 
   _restoreHandlers() {
@@ -173,6 +192,8 @@ export default class TaskEditView extends AbstractStatefulView {
     if (this._state.isRepeating) {
       this.element.querySelector('.card__repeat-days-inner').addEventListener('change', this.#repeatingChangeHandler);
     }
+
+    this.#setDatepicker();
   }
 
   #colorChangeHandler = (evt) => {
@@ -194,6 +215,12 @@ export default class TaskEditView extends AbstractStatefulView {
     this.#handleFormSubmit(TaskEditView.parseStateToTask(this._state));
   };
 
+  #dueDateChangeHandler = ([userDate]) => {
+    this.updateElement({
+      dueDate: userDate,
+    });
+  };
+
   #dueDateToggleHandler = (evt) => {
     evt.preventDefault();
     this.updateElement({
@@ -213,9 +240,21 @@ export default class TaskEditView extends AbstractStatefulView {
   #repeatingChangeHandler = (evt) => {
     evt.preventDefault();
     this.updateElement({
-      repeating: {...this._state.repeating, [evt.target.value]: evt.target.checked},
+      repeating: { ...this._state.repeating, [evt.target.value]: evt.target.checked },
     });
   };
+
+  #setDatepicker() {
+    if (this._state.isDueDate) {
+      this.#datepicker = flatpickr(this.element.querySelector('.card__date'),
+        {
+          dateFormat: 'j F',
+          defaultDate: this._state.dueDate,
+          onChange: this.#dueDateChangeHandler, // На событие flatpickr передаём наш колбэк
+        }
+      );
+    }
+  }
 
   static parseTaskToState(task) {
     return {
