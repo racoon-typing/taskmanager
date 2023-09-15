@@ -67,7 +67,7 @@ export default class BoardPresenter {
 
   #handleViewAction = (actionType, updateType, update) => {
     console.log(actionType, updateType, update);
-  }
+  };
 
   #handleModelEvent = (updateType, data) => {
     console.log(updateType, data);
