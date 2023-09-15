@@ -1,6 +1,7 @@
 import { remove, render, replace } from '../framework/render.js';
 import TaskView from '../view/task-view.js';
 import TaskEditView from '../view/task-edit-view.js';
+import {UserAction, UpdateType} from '../const.js';
 
 const Mode = {
   DEFAULT: 'DEFAULT',
@@ -92,11 +93,19 @@ export default class TaskPresenter {
   };
 
   #handleArchiveClick = () => {
-    this.#handleDataChange({ ...this.#task, isArchive: !this.#task.isArchive });
+    this.#handleDataChange(
+      UserAction.UPDATE_TASK,
+      UpdateType.MINOR,
+      { ...this.#task, isArchive: !this.#task.isArchive }
+    );
   };
 
   #handleFavoriteClick = () => {
-    this.#handleDataChange({ ...this.#task, isFavorite: !this.#task.isFavorite });
+    this.#handleDataChange(
+      UserAction.UPDATE_TASK,
+      UpdateType.MINOR,
+      { ...this.#task, isFavorite: !this.#task.isFavorite }
+    );
   };
 
   #handleEditClick = () => {
@@ -104,7 +113,11 @@ export default class TaskPresenter {
   };
 
   #handleFormSubmit = (task) => {
-    this.#handleDataChange(task);
+    this.#handleDataChange(
+      UserAction.UPDATE_TASK,
+      UpdateType.MINOR,
+      task
+    );
     this.#replaceFormToCard();
   };
 }
