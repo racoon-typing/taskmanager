@@ -2,6 +2,8 @@ import { remove, render, replace } from '../framework/render.js';
 import TaskView from '../view/task-view.js';
 import TaskEditView from '../view/task-edit-view.js';
 import {UserAction, UpdateType} from '../const.js';
+import {isTaskRepeating, isDatesEqual} from '../utils/task.js';
+
 
 const Mode = {
   DEFAULT: 'DEFAULT',
@@ -40,6 +42,7 @@ export default class TaskPresenter {
     this.#taskEditComponent = new TaskEditView({
       task: this.#task,
       onFormSubmit: this.#handleFormSubmit,
+      onDeleteClick: this.#handleDeleteClick,
     });
 
     if (prevTaskComponent === null || prevTaskEditComponent === null) {
@@ -112,12 +115,22 @@ export default class TaskPresenter {
     this.#replaceCardToForm();
   };
 
-  #handleFormSubmit = (task) => {
+  #handleFormSubmit = (update) => {
+    const isMinorUpdate = !isDatesEqual(!this.#task.dueDate, update.dueDate) || isTaskRepeating(this.#task.repeating) !== isTaskRepeating(update.repeating);
+
     this.#handleDataChange(
       UserAction.UPDATE_TASK,
-      UpdateType.MINOR,
-      task
+      isMinorUpdate ? UpdateType.MINOR : UpdateType.PATCH,
+      update
     );
     this.#replaceFormToCard();
+  };
+
+  #handleDeleteClick = (task) => {
+    this.#handleDataChange(
+      UserAction.DELETE_TASK,
+      UpdateType.MINOR,
+      task,
+    );
   };
 }
