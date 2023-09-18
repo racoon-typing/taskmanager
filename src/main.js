@@ -9,14 +9,27 @@ const siteMainElement = document.querySelector('.main');
 const siteHeaderElement = siteMainElement.querySelector('.main__control');
 const tasksModel = new TasksModel();
 const filterModel = new FilterModel();
-const boardPresentor = new BoardPresenter({boardContainer: siteMainElement, tasksModel, filterModel});
+const boardPresentor = new BoardPresenter({ boardContainer: siteMainElement, tasksModel, filterModel, onNewTaskDestroy: handleNewTaskFormClose });
 const filterPresenter = new FilterPresenter({
   filterContainer: siteMainElement,
   filterModel,
   tasksModel
 });
 
-render(new NewTaskButtonView(), siteHeaderElement);
+const newTaskButtonComponent = new NewTaskButtonView({
+  onClick: handleNewTaskButtonClick
+});
+
+function handleNewTaskFormClose() {
+  newTaskButtonComponent.element.disabled = false;
+}
+
+function handleNewTaskButtonClick() {
+  boardPresentor.createTask();
+  newTaskButtonComponent.element.disabled = true;
+}
+
+render(newTaskButtonComponent, siteHeaderElement);
 
 filterPresenter.init();
 boardPresentor.init();
