@@ -1,6 +1,5 @@
 import { render } from './framework/render.js';
 import NewTaskButtonView from './view/new-task-button-view';
-import FilterView from './view/filter-view';
 import BoardPresenter from './presenter/board-presentor';
 import FilterPresenter from './presenter/filter-presenter.js';
 import TasksModel from './model/task-model.js';
