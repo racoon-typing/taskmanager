@@ -11,6 +11,7 @@ export default class Observable {
    */
   addObserver(observer) {
     this.#observers.add(observer);
+    // console.log(this.#observers);
   }
 
   /**
@@ -28,6 +29,7 @@ export default class Observable {
    */
   _notify(event, payload) {
     this.#observers.forEach((observer) => observer(event, payload));
+    // console.log(this.#observers);
   }
 }
 
