@@ -5,42 +5,50 @@ import SortView from '../view/sort-view.js';
 import LoadMoreButtonView from '../view/load-more-button-view.js';
 import NoTaskView from '../view/no-task-view.js';
 import TaskPresenter from './task-presenter.js';
-import { SortType, UpdateType, UserAction } from '../const.js';
 import { sortTaskDown, sortTaskUp } from '../utils/task.js';
-
+import {filter} from '../utils/filter.js';
+import { SortType, UpdateType, UserAction, FilterType } from '../const.js';
 
 const TASK_COUNT_PER_STEP = 8;
 
 export default class BoardPresenter {
   #boardContainer = null;
   #tasksModel = null;
+  #filterModel = null;
 
   #boardComponent = new BoardView();
   #taskListComponent = new TaskListView();
   #loadMoreButtonComponent = null;
   #sortComponent = null;
-  #noTaskComponent = new NoTaskView();
+  #noTaskComponent = null;
 
   #renderedTaskCount = TASK_COUNT_PER_STEP;
   #taskPresenters = new Map();
   #currentSortType = SortType.DEFAULT;
+  #filterType = FilterType.ALL;
 
-  constructor({ boardContainer, tasksModel }) {
+  constructor({ boardContainer, tasksModel, filterModel }) {
     this.#boardContainer = boardContainer;
     this.#tasksModel = tasksModel;
+    this.#filterModel = filterModel;
 
     this.#tasksModel.addObserver(this.#handleModelEvent);
+    this.#filterModel.addObserver(this.#handleModelEvent);
   }
 
   get tasks() {
+    this.#filterType = this.#filterModel.filter;
+    const tasks = this.#tasksModel.tasks;
+    const filteredTasks = filter[this.#filterType](tasks);
+
     switch (this.#currentSortType) {
       case SortType.DATE_UP:
-        return [...this.#tasksModel.tasks].sort(sortTaskUp);
+        return filteredTasks.sort(sortTaskUp);
       case SortType.DATE_DOWN:
-        return [...this.#tasksModel.tasks].sort(sortTaskDown);
+        return filteredTasks.sort(sortTaskDown);
     }
 
-    return this.#tasksModel.tasks;
+    return filteredTasks;
   }
 
   init() {
@@ -49,8 +57,14 @@ export default class BoardPresenter {
 
   #handleLoadMoreButtonClick = () => {
     const taskCount = this.tasks.length;
-    const newRenderedTaskCount = Math.min(taskCount, this.#renderedTaskCount + TASK_COUNT_PER_STEP);
-    const tasks = this.tasks.slice(this.#renderedTaskCount, newRenderedTaskCount);
+    const newRenderedTaskCount = Math.min(
+      taskCount,
+      this.#renderedTaskCount + TASK_COUNT_PER_STEP
+    );
+    const tasks = this.tasks.slice(
+      this.#renderedTaskCount,
+      newRenderedTaskCount
+    );
 
     this.#renderTasks(tasks);
     this.#renderedTaskCount = newRenderedTaskCount;
@@ -110,14 +124,18 @@ export default class BoardPresenter {
       onSortTypeChange: this.#handleSortTypeChange,
     });
 
-    render(this.#sortComponent, this.#boardComponent.element, RenderPosition.AFTERBEGIN);
+    render(
+      this.#sortComponent,
+      this.#boardComponent.element,
+      RenderPosition.AFTERBEGIN
+    );
   }
 
   #renderTask(task) {
     const taskPresenter = new TaskPresenter({
       taskListContainer: this.#taskListComponent.element,
       onDataChange: this.#handleViewAction,
-      onModeChange: this.#handleModeChange
+      onModeChange: this.#handleModeChange,
     });
 
     taskPresenter.init(task);
@@ -129,25 +147,32 @@ export default class BoardPresenter {
   }
 
   #renderNoTasks() {
+    this.#noTaskComponent = new NoTaskView({
+      filterType: this.#filterType
+    });
+
     render(this.#noTaskComponent, this.#boardComponent.element, RenderPosition.AFTERBEGIN);
   }
 
   #renderLoadMoreButton() {
     this.#loadMoreButtonComponent = new LoadMoreButtonView({
-      onClick: this.#handleLoadMoreButtonClick
+      onClick: this.#handleLoadMoreButtonClick,
     });
     render(this.#loadMoreButtonComponent, this.#boardComponent.element);
   }
 
-  #clearBoard({resetRenderedTaskCount = false, resetSortType = false} = {}) {
+  #clearBoard({ resetRenderedTaskCount = false, resetSortType = false } = {}) {
     const taskCount = this.tasks.length;
 
     this.#taskPresenters.forEach((presenter) => presenter.destroy());
     this.#taskPresenters.clear();
 
     remove(this.#sortComponent);
-    remove(this.#noTaskComponent);
     remove(this.#loadMoreButtonComponent);
+
+    if (this.#noTaskComponent) {
+      remove(this.#noTaskComponent);
+    }
 
     if (resetRenderedTaskCount) {
       this.#renderedTaskCount = TASK_COUNT_PER_STEP;
@@ -173,7 +198,9 @@ export default class BoardPresenter {
     this.#renderSort();
     render(this.#taskListComponent, this.#boardComponent.element);
 
-    this.#renderTasks(tasks.slice(0, Math.min(taskCount, this.#renderedTaskCount)));
+    this.#renderTasks(
+      tasks.slice(0, Math.min(taskCount, this.#renderedTaskCount))
+    );
 
     if (taskCount > this.#renderedTaskCount) {
       this.#renderLoadMoreButton();

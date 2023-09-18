@@ -5,12 +5,11 @@ import FilterPresenter from './presenter/filter-presenter.js';
 import TasksModel from './model/task-model.js';
 import FilterModel from './model/filter-model.js';
 
-
 const siteMainElement = document.querySelector('.main');
 const siteHeaderElement = siteMainElement.querySelector('.main__control');
 const tasksModel = new TasksModel();
 const filterModel = new FilterModel();
-const boardPresentor = new BoardPresenter({boardContainer: siteMainElement, tasksModel});
+const boardPresentor = new BoardPresenter({boardContainer: siteMainElement, tasksModel, filterModel});
 const filterPresenter = new FilterPresenter({
   filterContainer: siteMainElement,
   filterModel,
