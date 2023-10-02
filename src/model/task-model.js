@@ -1,6 +1,5 @@
 import Observable from '../framework/observable.js';
 import { UpdateType } from '../const.js';
-import TaskApiService from '../tasks-api-service.js';
 
 export default class TasksModel extends Observable {
   #tasksApiService = null;
