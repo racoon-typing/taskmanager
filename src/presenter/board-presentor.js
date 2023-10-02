@@ -4,10 +4,11 @@ import TaskListView from '../view/task-list-view.js';
 import SortView from '../view/sort-view.js';
 import LoadMoreButtonView from '../view/load-more-button-view.js';
 import NoTaskView from '../view/no-task-view.js';
+import LoadingView from '../view/loading-view.js';
 import TaskPresenter from './task-presenter.js';
 import NewTaskPresenter from './new-task-presenter.js';
 import { sortTaskDown, sortTaskUp } from '../utils/task.js';
-import {filter} from '../utils/filter.js';
+import { filter } from '../utils/filter.js';
 import { SortType, UpdateType, UserAction, FilterType } from '../const.js';
 
 const TASK_COUNT_PER_STEP = 8;
@@ -19,6 +20,7 @@ export default class BoardPresenter {
 
   #boardComponent = new BoardView();
   #taskListComponent = new TaskListView();
+  #loadingComponent = new LoadingView();
   #loadMoreButtonComponent = null;
   #sortComponent = null;
   #noTaskComponent = null;
@@ -28,6 +30,7 @@ export default class BoardPresenter {
   #newTaskPresenter = null;
   #currentSortType = SortType.DEFAULT;
   #filterType = FilterType.ALL;
+  #isLoading = true;
 
   constructor({ boardContainer, tasksModel, filterModel, onNewTaskDestroy }) {
     this.#boardContainer = boardContainer;
@@ -120,6 +123,11 @@ export default class BoardPresenter {
         this.#clearBoard({ resetRenderedTaskCount: true, resetSortType: true });
         this.#renderBoard();
         break;
+      case UpdateType.INIT:
+        this.#isLoading = false;
+        remove(this.#loadingComponent);
+        this.#renderBoard();
+        break;
     }
   };
 
@@ -161,10 +169,16 @@ export default class BoardPresenter {
     tasks.forEach((task) => this.#renderTask(task));
   }
 
+  #renderLoading() {
+    render(this.#loadingComponent, this.#boardComponent.element, RenderPosition.AFTERBEGIN);
+  }
+
   #renderNoTasks() {
     this.#noTaskComponent = new NoTaskView({
       filterType: this.#filterType
     });
+
+    remove(this.#loadingComponent);
 
     render(this.#noTaskComponent, this.#boardComponent.element, RenderPosition.AFTERBEGIN);
   }
@@ -203,6 +217,11 @@ export default class BoardPresenter {
 
   #renderBoard() {
     render(this.#boardComponent, this.#boardContainer);
+
+    if (this.#isLoading) {
+      this.#renderLoading();
+      return;
+    }
 
     const tasks = this.tasks;
     const taskCount = tasks.length;
