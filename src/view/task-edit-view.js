@@ -25,7 +25,7 @@ const BLANK_TASK = {
 };
 
 
-function createTaskEditColorsTemplate(currentColor) {
+function createTaskEditColorsTemplate(currentColor, isDisabled) {
   return COLORS.map((color) => `<input
       type="radio"
       id="color-${color}"
@@ -33,6 +33,7 @@ function createTaskEditColorsTemplate(currentColor) {
       name="color"
       value="${color}"
       ${currentColor === color ? 'checked' : ''}
+      ${isDisabled ? 'disabled' : ''}
     />
     <label
       for="color-${color}"
@@ -41,9 +42,9 @@ function createTaskEditColorsTemplate(currentColor) {
     >`).join('');
 }
 
-function createTaskEditReapeatingTemplate(repeating, isRepeating) {
+function createTaskEditReapeatingTemplate(repeating, isRepeating, isDisabled) {
   return (`
-      <button class="card__repeat-toggle" type="button">
+      <button class="card__repeat-toggle" type="button" ${isDisabled ? 'disabled' : ''}>
         repeat:<span class="card__repeat-status">${isRepeating ? 'yes' : 'no'}</span>
       </button>
 
@@ -56,6 +57,7 @@ function createTaskEditReapeatingTemplate(repeating, isRepeating) {
             name="repeat"
             value="${day}"
             ${repeat ? 'checked' : ''}
+            ${isDisabled ? 'disabled' : ''}
           />
           <label class="card__repeat-day" for="repeat-${day}"
             >${day}</label
@@ -65,10 +67,10 @@ function createTaskEditReapeatingTemplate(repeating, isRepeating) {
   );
 }
 
-function createTaskEditDateTemplate(dueDate, isDueDate) {
+function createTaskEditDateTemplate(dueDate, isDueDate, isDisabled) {
   return (
     `
-    <button class="card__date-deadline-toggle" type="button">
+    <button class="card__date-deadline-toggle" type="button" ${isDisabled ? 'disabled' : ''}>
       date: <span class="card__date-status">${isDueDate !== null ? 'yes' : 'no'}</span>
     </button>
 
@@ -81,6 +83,7 @@ function createTaskEditDateTemplate(dueDate, isDueDate) {
             placeholder=""
             name="date"
             value="${humanizeTaskDueDate(dueDate)}"
+            ${isDisabled ? 'disabled' : ''}
           />
         </label>
       </fieldset>`
@@ -90,49 +93,55 @@ function createTaskEditDateTemplate(dueDate, isDueDate) {
 }
 
 function createTaskEditTemplate(data) {
-  const { color, description, dueDate, repeating, isDueDate, isRepeating } = data;
+  const {
+    color,
+    description,
+    dueDate,
+    repeating,
+    isDueDate,
+    isRepeating,
+    isDisabled,
+    isSaving,
+    isDeleting,
+  } = data;
 
-  const dateTemplate = createTaskEditDateTemplate(dueDate, isDueDate);
+  const dateTemplate = createTaskEditDateTemplate(dueDate, isDueDate, isDisabled);
   const repeatingClassName = isRepeating
     ? 'card--repeat'
     : '';
 
-  const repeatingTemplate = createTaskEditReapeatingTemplate(repeating, isRepeating);
-  const colorsTemplate = createTaskEditColorsTemplate(color);
+  const repeatingTemplate = createTaskEditReapeatingTemplate(repeating, isRepeating, isDisabled);
+  const colorsTemplate = createTaskEditColorsTemplate(color, isDisabled);
 
   const isSubmitDisabled = (isDueDate && dueDate === null) || (isRepeating && !isTaskRepeating(repeating));
 
   return `
     <article class="card card--edit card--${color} ${repeatingClassName}">
       <form class="card__form" method="get">
-        <div class="card__inner">
-          <div class="card__color-bar">
-            <svg class="card__color-bar-wave" width="100%" height="10">
-              <use xlink:href="#wave"></use>
-            </svg>
-          </div>
-
-          <div class="card__textarea-wrap">
-            <label>
-              <textarea
-                class="card__text"
-                placeholder="Start typing your text here..."
-                name="text"
-              >
-                ${he.encode(description)}
-              </textarea>
-            </label>
-          </div>
+      <div class="card__inner">
+        <div class="card__color-bar">
+          <svg class="card__color-bar-wave" width="100%" height="10">
+            <use xlink:href="#wave"></use>
+          </svg>
+        </div>
+        <div class="card__textarea-wrap">
+          <label>
+            <textarea
+              class="card__text"
+              placeholder="Start typing your text here..."
+              name="text"
+              ${isDisabled ? 'disabled' : ''}
+            >${he.encode(description)}</textarea>
+          </label>
+        </div>
 
           <div class="card__settings">
             <div class="card__details">
               <div class="card__dates">
                 ${dateTemplate}
-
                 ${repeatingTemplate}
               </div>
             </div>
-
             <div class="card__colors-inner">
               <h3 class="card__colors-title">Color</h3>
               <div class="card__colors-wrap">
@@ -141,10 +150,13 @@ function createTaskEditTemplate(data) {
             </div>
           </div>
 
-          <div class="card__status-btns">
-            <button class="card__save" type="submit" ${isSubmitDisabled ? 'disabled' : ''}>save</button>
-            <button class="card__delete" type="button">delete</button>
-          </div>
+        <div class="card__status-btns">
+          <button class="card__save" type="submit" ${isSubmitDisabled || isDisabled ? 'disabled' : ''}>
+            ${isSaving ? 'saving...' : 'save'}
+          </button>
+          <button class="card__delete" type="button" ${isDisabled ? 'disabled' : ''}>
+            ${isDeleting ? 'deleting...' : 'delete'}
+          </button>
         </div>
       </form>
     </article>
@@ -270,6 +282,9 @@ export default class TaskEditView extends AbstractStatefulView {
       ...task,
       isDueDate: task.dueDate !== null,
       isRepeating: isTaskRepeating(task.repeating),
+      isDisabled: false,
+      isSaving: false,
+      isDeleting: false,
     };
   }
 
@@ -294,6 +309,9 @@ export default class TaskEditView extends AbstractStatefulView {
 
     delete task.isDueDate;
     delete task.isRepeating;
+    delete task.isDisabled;
+    delete task.isSaving;
+    delete task.isDeleting;
 
     return task;
   }
